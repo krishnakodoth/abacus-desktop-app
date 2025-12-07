@@ -1,0 +1,60 @@
+{
+  "name": "abacus-desktop-app",
+  "version": "1.0.0",
+  "description": "Desktop application for kids to practice Abacus calculations",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "concurrently \"pnpm --filter abacus-app dev\" \"pnpm electron:dev\"",
+    "electron:dev": "wait-on tcp:5173 && cross-env ELECTRON_START_URL=http://localhost:5173 electron .",
+    "prebuild": "node -e \"const fs = require('fs'); const path = 'build-output'; if (fs.existsSync(path)) fs.rmSync(path, {recursive: true, force: true, maxRetries: 3, retryDelay: 500});\"",
+    "build": "pnpm --filter abacus-app build && pnpm electron:build",
+    "build:installer": "pnpm --filter abacus-app build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false pnpm electron:build:full",
+    "electron:build": "electron-builder --dir",
+    "electron:build:full": "electron-builder",
+    "start": "electron ."
+  },
+  "keywords": [
+    "electron",
+    "abacus",
+    "education"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "asar": "^3.2.0",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^28.3.3",
+    "electron-builder": "^24.9.1",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.abacus.desktop",
+    "productName": "Abacus Practice",
+    "directories": {
+      "output": "build-output",
+      "buildResources": ".",
+      "app": "."
+    },
+    "files": [
+      "!app/src",
+      "!app/node_modules",
+      "!app/*.json",
+      "!app/vite.config.js",
+      "electron/**/*",
+      "app/dist/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "portable",
+      "sign": null,
+      "verifyUpdateCodeSignature": false
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}
