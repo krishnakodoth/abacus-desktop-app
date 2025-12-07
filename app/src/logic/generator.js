@@ -1,8 +1,8 @@
 function getMin(digits) {
-  if (digits === 1) return 0;
+  if (digits === 1) return 1;
   if (digits === 2) return 10;
   if (digits === 3) return 100;
-  return 0;
+  return 1;
 }
 
 function getMax(digits) {
@@ -51,7 +51,6 @@ export function generateQuestion({ digits, count, mixed = false, allowNegative =
   
   for (let i = 1; i < count; i++) {
     const operation = getRandomOperation();
-    operations.push(operation);
     
     let nextNumber;
     let currentMin, currentMax;
@@ -60,28 +59,39 @@ export function generateQuestion({ digits, count, mixed = false, allowNegative =
       const randomDigits = getRandomDigits();
       currentMin = getMin(randomDigits);
       currentMax = getMax(randomDigits);
-      nextNumber = getRandomNumber(currentMin, currentMax);
     } else {
       currentMin = min;
       currentMax = max;
-      nextNumber = getRandomNumber(min, max);
     }
     
-    if (operation === '-') {
+    if (operation === '-' && !allowNegative) {
+      // For subtraction with no negative results allowed, 
+      // calculate current sum using operations added so far (before pushing new operation)
       const currentSum = calculatePartialAnswer(numbers, operations);
       
-      if (!allowNegative) {
-        // Ensure result is not negative
-        while (currentSum - nextNumber < 0 && nextNumber > currentMin) {
-          nextNumber = getRandomNumber(currentMin, Math.min(currentSum, currentMax));
+      if (currentSum >= 0) {
+        // Ensure result is not negative by limiting the subtraction number
+        // to be at most the current sum
+        const maxSubtract = Math.min(currentSum, currentMax);
+        
+        if (maxSubtract >= currentMin) {
+          // Generate a number that won't make the result negative
+          nextNumber = getRandomNumber(currentMin, maxSubtract);
+        } else {
+          // If currentSum is less than currentMin, set nextNumber to currentSum
+          // This ensures result stays at 0 or positive
+          nextNumber = Math.max(0, currentSum);
         }
-        // If still negative, ensure final result is at least 0
-        if (currentSum - nextNumber < 0) {
-          nextNumber = currentSum;
-        }
+      } else {
+        // If current sum is already negative, set to 0
+        nextNumber = 0;
       }
+    } else {
+      // For addition or when negative results are allowed, generate normally
+      nextNumber = getRandomNumber(currentMin, currentMax);
     }
     
+    operations.push(operation);
     numbers.push(nextNumber);
   }
   
